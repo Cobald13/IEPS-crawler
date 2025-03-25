@@ -64,8 +64,8 @@ def crawl_one_url(url):
             return
 
         if not result.get('is_binary', False):
-            meta_keywords = extract_page_data(page_id, result['html_content'], cursor)
-            extract_links_to_frontier(result['url'], result['html_content'], cursor, meta_keywords)
+            meta_keywords, keyword_match_count = extract_page_data(page_id, result['html_content'], cursor)
+            extract_links_to_frontier(result['url'], result['html_content'], cursor, meta_keywords, keyword_match_count)
             extract_links(page_id, result['url'], result['html_content'], cursor)
             extract_and_store_images(page_id, result['url'], result['html_content'], cursor)
 

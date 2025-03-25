@@ -5,6 +5,7 @@ from datetime import datetime
 
 from url_utils import canonicalize_url
 from preferential_scoring import combined_score
+from preferential_scoring import content_keyword_match, slovene_keywords
 
 def extract_page_data(page_id, html_content, cursor):
     if not page_id:
@@ -39,7 +40,8 @@ def extract_page_data(page_id, html_content, cursor):
             VALUES (%s, %s, %s)
         """, (page_id, 'KEYWORDS', meta_keywords))
 
-    return meta_keywords  # Optional: used for preferential crawling
+    keyword_match_count = content_keyword_match(html_content, slovene_keywords)
+    return meta_keywords, keyword_match_count
 
 def extract_links(page_id, base_url, html_content, cursor):
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -61,7 +63,7 @@ def extract_links(page_id, base_url, html_content, cursor):
                 ON CONFLICT DO NOTHING
             """, (page_id, to_page_id))
 
-def extract_links_to_frontier(base_url, html_content, cursor, meta_keywords=None):
+def extract_links_to_frontier(base_url, html_content, cursor, meta_keywords=None, keyword_match_count=0):
     base_url = canonicalize_url(base_url)  # Canonicalize base URL
     soup = BeautifulSoup(html_content, 'html.parser')
     links = soup.find_all(['a', 'div', 'span', 'button'], href=True) + soup.find_all(onclick=True)
@@ -85,9 +87,13 @@ def extract_links_to_frontier(base_url, html_content, cursor, meta_keywords=None
         if href:
             full_url = urljoin(base_url, href).split('#')[0].strip()
             full_url = canonicalize_url(full_url)
+            
+            # Ignore only user profiles
+            if "/profili" or "/delo" in full_url:
+                continue  # skip user profile pages
 
             # Compute combined priority
-            priority = combined_score(tag, full_url, meta_keywords, last_accessed=now)
+            priority = combined_score(tag, full_url, meta_keywords, last_accessed=now, keyword_match_count=keyword_match_count)
 
             try:
                 cursor.execute("""
