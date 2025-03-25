@@ -5,7 +5,7 @@ from robots_handler import is_allowed
 from throttle import enforce_crawl_delay
 from html_downloader import download_page_with_binary_detection
 from duplicate_detector import store_page_with_duplicate_detection
-from data_extractor import extract_page_data, extract_links_to_frontier
+from data_extractor import extract_page_data, extract_links_to_frontier, extract_links
 from image_extractor import extract_and_store_images
 
 from concurrent.futures import ThreadPoolExecutor
@@ -66,6 +66,7 @@ def crawl_one_url(url):
         if not result.get('is_binary', False):
             meta_keywords = extract_page_data(page_id, result['html_content'], cursor)
             extract_links_to_frontier(result['url'], result['html_content'], cursor, meta_keywords)
+            extract_links(page_id, result['url'], result['html_content'], cursor)
             extract_and_store_images(page_id, result['url'], result['html_content'], cursor)
 
         cursor.execute("UPDATE url_frontier SET status = %s WHERE url = %s", ('crawled', url))
