@@ -29,13 +29,25 @@ def crawl_one_url(url):
         url = canonicalize_url(url)
 
         # Check already crawled
+        # Check already crawled
         cursor.execute("SELECT id FROM page WHERE url = %s", (url,))
-        if cursor.fetchone():
+        existing = cursor.fetchone()
+        if existing:
             print(f"[SKIP] Already crawled: {url}")
+            page_id = existing[0]
+        
+            # Ponovno naloži HTML iz baze
+            cursor.execute("SELECT html_content FROM page WHERE id = %s", (page_id,))
+            html_content = cursor.fetchone()[0]
+        
+            if html_content:
+                extract_links(page_id, url, html_content, cursor)
+        
             cursor.execute("UPDATE url_frontier SET status = %s WHERE url = %s", ('crawled', url))
             cursor.close()
             conn.close()
             return
+
 
         allowed, delay = is_allowed(url, cursor)
         if not allowed:

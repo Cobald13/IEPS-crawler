@@ -49,10 +49,17 @@ def extract_links(page_id, base_url, html_content, cursor):
 
     for tag in links:
         href = tag['href']
-        full_url = urljoin(base_url, href).split('#')[0]  # Normalize URL, strip fragments
-        full_url = canonicalize_url(full_url)  # Apply canonicalization
+        full_url = canonicalize_url(urljoin(base_url, href).split('#')[0])
 
-        # Lookup to_page in DB
+        # Binary datoteke (.doc, .ppt, ...)
+        if re.search(r"\.(docx?|pptx?)$", full_url, re.IGNORECASE):
+            cursor.execute("""
+                INSERT INTO page_data (page_id, data_type_code)
+                VALUES (%s, %s)
+            """, (page_id, 'BINARY_LINK'))
+            continue
+
+        # Normalno vstavi v link tabelo, če vodi na drugo stran
         cursor.execute("SELECT id FROM page WHERE url = %s", (full_url,))
         result = cursor.fetchone()
         if result:
