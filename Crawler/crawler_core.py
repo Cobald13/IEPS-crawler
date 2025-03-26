@@ -3,7 +3,7 @@
 from url_utils import canonicalize_url
 from robots_handler import is_allowed
 from throttle import enforce_crawl_delay
-from html_downloader import download_page_with_binary_detection
+from html_downloader import download_page_with_binary_detection, download_page_with_selenium, is_javascript_heavy
 from duplicate_detector import store_page_with_duplicate_detection
 from data_extractor import extract_page_data, extract_links_to_frontier, extract_links
 from image_extractor import extract_and_store_images
@@ -35,14 +35,14 @@ def crawl_one_url(url):
         if existing:
             print(f"[SKIP] Already crawled: {url}")
             page_id = existing[0]
-        
+
             # Ponovno naloži HTML iz baze
             cursor.execute("SELECT html_content FROM page WHERE id = %s", (page_id,))
             html_content = cursor.fetchone()[0]
-        
+
             if html_content:
                 extract_links(page_id, url, html_content, cursor)
-        
+
             cursor.execute("UPDATE url_frontier SET status = %s WHERE url = %s", ('crawled', url))
             cursor.close()
             conn.close()
@@ -58,7 +58,10 @@ def crawl_one_url(url):
             return
 
         enforce_crawl_delay(url, delay)
-        result = download_page_with_binary_detection(url)
+        if is_javascript_heavy(url):
+            result = download_page_with_selenium(url)
+        else:
+            result = download_page_with_binary_detection(url)
 
         if not result or not result.get('url'):
             print(f"[ERROR] Download failed for {url}")

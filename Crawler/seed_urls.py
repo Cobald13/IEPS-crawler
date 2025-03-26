@@ -16,9 +16,9 @@ cursor.execute("SET search_path TO crawldb;")
 # Seed URLs
 seed_urls = [
     "https://slo-tech.com/",
-    "https://slo-tech.com/forum/isci/?q=chat+gpt",
-    "https://slo-tech.com/forum/isci/?q=chatgpt",
-    "https://slo-tech.com/clanki/"
+    "https://slo-tech.com/novice/arhiv/",
+    "https://slo-tech.com/forum",
+    "https://slo-tech.com/clanki",
 ]
 
 # Insert into frontier

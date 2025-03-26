@@ -96,8 +96,9 @@ def extract_links_to_frontier(base_url, html_content, cursor, meta_keywords=None
             full_url = canonicalize_url(full_url)
             
             # Ignore only user profiles
-            if "/profili" or "/delo" in full_url:
-                continue  # skip user profile pages
+            if "/profili" in full_url or "/delo" in full_url:
+                continue
+
 
             # Compute combined priority
             priority = combined_score(tag, full_url, meta_keywords, last_accessed=now, keyword_match_count=keyword_match_count)
